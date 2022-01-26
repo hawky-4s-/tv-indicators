@@ -1,0 +1,66 @@
+//@version=5
+// Popgun Bar Pattern Indicator
+// Written by Wes Bennett - modified by me
+// 9-26-2020
+
+indicator(title='Popgun Bar Pattern', overlay=true)
+
+ATRrange = input.int(26, minval=1, title='ATR Period')
+ATRstopbuffer = input.int(33, minval=1, title='Stop Buffer Percent') / 100
+ATRentrybuffer = input.int(33, minval=1, title='Entry Buffer Percent') / 100
+stoprange = input.int(9, minval=1, title='Stop Bar Range')
+R1 = input.int(3, minval=1, title='Reward Multiple')
+
+ATR = ta.sma(ta.tr, ATRrange)
+
+// Evaluations
+popguncheckbull = high[2] >= high[1] and high[1] <= high and low[2] <= low[1] and low[1] >= low and close >= high[1]
+popguncheckbear = high[2] >= high[1] and high[1] <= high and low[2] <= low[1] and low[1] >= low and close <= low[1]
+
+// Calcs
+popgunbull = popguncheckbull ? high + ATR * ATRentrybuffer : na
+popgunbear = popguncheckbear ? low - ATR * ATRentrybuffer : na
+bullstop = ta.lowest(stoprange) - ATR * ATRstopbuffer
+bearstop = ta.highest(stoprange) + ATR * ATRstopbuffer
+bulltarget = (popgunbull - bullstop) * R1 + popgunbull
+beartarget = popgunbear - (bearstop - popgunbear) * R1
+
+candleSize = math.abs(high - low)
+
+// Plots
+plot(popgunbull, style=plot.style_circles, linewidth=3, title='Popgun Signal Bullish', color=color.new(color.green, 0))
+plot(popgunbear, style=plot.style_circles, linewidth=3, title='Popgun Signal Bearish', color=color.new(color.green, 0))
+plot(popguncheckbull ? bullstop : na, style=plot.style_circles, linewidth=3, title='Bullish Trade Stop', color=color.new(color.red, 0))
+plot(popguncheckbear ? bearstop : na, style=plot.style_circles, linewidth=3, title='Bearish Trade Stop', color=color.new(color.red, 0))
+plot(popguncheckbull ? bulltarget : na, style=plot.style_circles, linewidth=3, title='Bullish Trade Target', color=color.new(color.orange, 0))
+plot(popguncheckbear ? beartarget : na, style=plot.style_circles, linewidth=3, title='Bearish Trade Target', color=color.new(color.orange, 0))
+
+isUp = close > open
+isDown = close <= open
+isOutsideUp = high > high[1] and low < low[1] and isUp
+isOutsideDown = high > high[1] and low < low[1] and isDown
+isInside = high < high[1] and low > low[1]
+barcolor(popguncheckbull ? color.purple : popguncheckbear ? color.purple : na)
+//plotbar(high, high, low, low, title='Title', color=color.new(color.yellow, 0))
+
+//line.new()
+
+if popguncheckbull or popguncheckbear
+    string labelText = "High:" + str.tostring(high, format.mintick) + "\n" +
+                       "Low:" + str.tostring(low, format.mintick) + "\n" +
+                       "Size:" + str.tostring(candleSize, format.mintick) + "\n\n" +
+                       "Targets above:\n" +
+                       "1. " + str.tostring(high + candleSize, format.mintick) + "\n" + 
+                       "2. " + str.tostring(high + 2 * candleSize, format.mintick) + "\n" + 
+                       "3. " + str.tostring(high + 3 * candleSize, format.mintick) + "\n\n" + 
+                       "Targets below:\n" +
+                       "1. " + str.tostring(low - candleSize, format.mintick) + "\n" + 
+                       "2. " + str.tostring(low - 2 * candleSize, format.mintick) + "\n" + 
+                       "3. " + str.tostring(low - 3 * candleSize, format.mintick)
+    label.new( x = bar_index, y = math.max(high, high[1]), text = labelText, textalign = text.align_left, color = color.new(color.orange, 50), textcolor = color.new(color.white, 0), style = label.style_label_lower_right, size = size.large)
+
+//bgcolor(popguncheckbull ? #52BE80 : na, title='Bullish Popgun Bar Highlight', transp=80)
+//bgcolor(popguncheckbear ? #E13207 : na, title='Bearish Popgun Bar Highlight', transp=80)
+
+alertcondition(popguncheckbull or popguncheckbear, title='Popgun Trigger', message='Popgun Bar Pattern!')
+
