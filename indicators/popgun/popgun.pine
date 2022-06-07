@@ -1,6 +1,6 @@
 //@version=5
 // Popgun Bar Pattern Indicator
-// Written by Wes Bennett - modified by me
+// Written by Wes Bennett
 // 9-26-2020
 
 indicator(title='Popgun Bar Pattern', overlay=true)
@@ -14,8 +14,8 @@ R1 = input.int(3, minval=1, title='Reward Multiple')
 ATR = ta.sma(ta.tr, ATRrange)
 
 // Evaluations
-popguncheckbull = high[2] >= high[1] and high[1] <= high and low[2] <= low[1] and low[1] >= low and close >= high[1]
-popguncheckbear = high[2] >= high[1] and high[1] <= high and low[2] <= low[1] and low[1] >= low and close <= low[1]
+popguncheckbull = high[2] >= high[1] and high[1] <= high and low[2] <= low[1] and low[1] >= low 
+popguncheckbear = high[2] >= high[1] and high[1] <= high and low[2] <= low[1] and low[1] >= low
 
 // Calcs
 popgunbull = popguncheckbull ? high + ATR * ATRentrybuffer : na
